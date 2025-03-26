@@ -1,0 +1,10 @@
+[package]
+name = "feemultitool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.20", features = ["derive"] }
+grrs = "0.1.0"
+image = "0.25.5"
+imageproc = "0.25.0"
