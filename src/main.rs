@@ -56,7 +56,7 @@ fn main() {
         None => {
             let items = ["1 - Fix Normal", "2 - Split Multi", "3 - Join Multi"];
             let command = Select::new()
-            .with_prompt("Choose a command (Use arrows and enter to confirm)")
+            .with_prompt("Choose a command (Use arrows and enter or space to confirm)")
             .items(&items)
             .default(0)
             .interact()
@@ -65,7 +65,7 @@ fn main() {
                 0 => {
                     let normal_path = native_dialog::FileDialog::new()
                     .set_title("Select Normal Map")
-                    .add_filter("PNG Image", &["png"])
+                    .add_filter("Image", &["png", "tga"])
                     .show_open_single_file()
                     .unwrap()
                     .unwrap()
@@ -79,7 +79,7 @@ fn main() {
                 1 => {
                     let multi_path = native_dialog::FileDialog::new()
                     .set_title("Select Multi Map")
-                    .add_filter("PNG Image", &["png"])
+                    .add_filter("Image", &["png", "tga"])
                     .show_open_single_file()
                     .unwrap()
                     .unwrap()
@@ -93,7 +93,7 @@ fn main() {
                 2 => {
                     let paths = native_dialog::FileDialog::new()
                     .set_title("Select Multi Map Channel Images")
-                    .add_filter("PNG Image", &["png"])
+                    .add_filter("Image", &["png", "tga"])
                     .show_open_multiple_file()
                     .unwrap();
 
@@ -101,28 +101,28 @@ fn main() {
                         panic!("Four images should be selected");
                     } else {
                         let r_path = paths.iter()
-                        .find(|f| f.to_str().unwrap().ends_with("_R.png"))
+                        .find(|f| f.as_path().file_prefix().unwrap().to_str().unwrap().ends_with("_R"))
                         .expect("Should have a Red Channel Image.")                        
                         .to_str()
                         .unwrap()
                         .to_string();
 
                         let g_path = paths.iter()
-                        .find(|f| f.to_str().unwrap().ends_with("_G.png"))
+                        .find(|f| f.as_path().file_prefix().unwrap().to_str().unwrap().ends_with("_G"))
                         .expect("Should have a Green Channel Image.")                        
                         .to_str()
                         .unwrap()
                         .to_string();
 
                         let b_path = paths.iter()
-                        .find(|f| f.to_str().unwrap().ends_with("_B.png"))
+                        .find(|f| f.as_path().file_prefix().unwrap().to_str().unwrap().ends_with("_B"))
                         .expect("Should have a Blue Channel Image.")                        
                         .to_str()
                         .unwrap()
                         .to_string();
                     
                         let a_path = paths.iter()
-                        .find(|f| f.to_str().unwrap().ends_with("_A.png"))
+                        .find(|f| f.as_path().file_prefix().unwrap().to_str().unwrap().ends_with("_A"))
                         .expect("Should have a Alpha Channel Image.")
                         .to_str()
                         .unwrap()
@@ -145,7 +145,23 @@ fn split(multi_path: String) {
     let image = ImageReader::open(path).expect("Multi Path should be an image.");
     let binding = image.decode().unwrap().to_rgba8();
     for x in 0..4 {
-        let channel = map_colors(&binding, |p| { Rgba([p[x], p[x], p[x], 255]) });
+        let channel = match x {
+            0 => {
+                map_colors(&binding, |p| { Rgba([p[x], 0, 0, 255]) })
+            },
+            1 => {
+                map_colors(&binding, |p| { Rgba([0, p[x], 0, 255]) })
+            },
+            2 => {
+                map_colors(&binding, |p| { Rgba([0, 0, p[x], 255]) })
+            },
+            3 =>{
+                map_colors(&binding, |p| { Rgba([0, 0, 0, p[x]]) })
+            },
+            _ => {
+                map_colors(&binding, |p| { Rgba([p[x], p[x], p[x], 255]) })
+            }
+        };
         let ext = match x {
             0 => "_R",
             1 => "_G",
@@ -154,9 +170,9 @@ fn split(multi_path: String) {
             _ => "_O"
            
         };
-        let new_file = path.file_prefix().unwrap().to_str().unwrap().to_string() + ext + ".png";
+        let new_file = path.file_prefix().unwrap().to_str().unwrap().to_string() + ext + ".tga";
         let save_path = path.with_file_name(new_file);
-        channel.save_with_format(save_path, image::ImageFormat::Png).unwrap();
+        channel.save_with_format(save_path, image::ImageFormat::Tga).unwrap();
     }
 }
 
@@ -178,13 +194,13 @@ fn join(r_path: String, g_path: String, b_path: String, a_path: String,) {
             let r_pixel = r_image.get_pixel(w, h)[0];
             let g_pixel = g_image.get_pixel(w, h)[1];
             let b_pixel = b_image.get_pixel(w, h)[2];
-            let a_pixel = a_image.get_pixel(w, h)[1];
+            let a_pixel = a_image.get_pixel(w, h)[3];
             let pixel = Rgba::from([r_pixel, g_pixel, b_pixel, a_pixel]);
             multi.put_pixel(w, h, pixel);
         }
     }
-    let save_path = Path::new(&r_path).file_prefix().unwrap().to_str().unwrap().to_string() + "GBA.png";
-    multi.save_with_format(save_path, image::ImageFormat::Png).unwrap();
+    let save_path = Path::new(&r_path).file_prefix().unwrap().to_str().unwrap().to_string() + "GBA.tga";
+    multi.save_with_format(save_path, image::ImageFormat::Tga).unwrap();
 }
 
 fn normal(normal_path: String) {
