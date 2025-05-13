@@ -145,23 +145,7 @@ fn split(multi_path: String) {
     let image = ImageReader::open(path).expect("Multi Path should be an image.");
     let binding = image.decode().unwrap().to_rgba8();
     for x in 0..4 {
-        let channel = match x {
-            0 => {
-                map_colors(&binding, |p| { Rgba([p[x], 0, 0, 255]) })
-            },
-            1 => {
-                map_colors(&binding, |p| { Rgba([0, p[x], 0, 255]) })
-            },
-            2 => {
-                map_colors(&binding, |p| { Rgba([0, 0, p[x], 255]) })
-            },
-            3 =>{
-                map_colors(&binding, |p| { Rgba([0, 0, 0, p[x]]) })
-            },
-            _ => {
-                map_colors(&binding, |p| { Rgba([p[x], p[x], p[x], 255]) })
-            }
-        };
+        let buf = map_colors(&binding, |p| Rgba([p[x], p[x], p[x], 255]));
         let ext = match x {
             0 => "_R",
             1 => "_G",
@@ -172,7 +156,7 @@ fn split(multi_path: String) {
         };
         let new_file = path.file_prefix().unwrap().to_str().unwrap().to_string() + ext + ".tga";
         let save_path = path.with_file_name(new_file);
-        channel.save_with_format(save_path, image::ImageFormat::Tga).unwrap();
+        buf.save_with_format(save_path, image::ImageFormat::Tga).unwrap();
     }
 }
 
