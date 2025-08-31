@@ -161,10 +161,15 @@ fn split(multi_path: String) {
 }
 
 fn join(r_path: String, g_path: String, b_path: String, a_path: String,) {
-    let r_image = ImageReader::open(Path::new(&r_path)).expect("R Path should be an image.").decode().unwrap().to_rgba8();
-    let g_image = ImageReader::open(Path::new(&g_path)).expect("G Path should be an image.").decode().unwrap().to_rgba8();
-    let b_image = ImageReader::open(Path::new(&b_path)).expect("B Path should be an image.").decode().unwrap().to_rgba8();
-    let a_image = ImageReader::open(Path::new(&a_path)).expect("A Path should be an image.").decode().unwrap().to_rgba8();
+    let red_path = Path::new(&r_path);
+    let green_path = Path::new(&g_path);
+    let blue_path = Path::new(&b_path);
+    let alpha_path = Path::new(&a_path);
+
+    let r_image = ImageReader::open(red_path).expect("R Path should be an image.").decode().unwrap().to_rgba8();
+    let g_image = ImageReader::open(green_path).expect("G Path should be an image.").decode().unwrap().to_rgba8();
+    let b_image = ImageReader::open(blue_path).expect("B Path should be an image.").decode().unwrap().to_rgba8();
+    let a_image = ImageReader::open(alpha_path).expect("A Path should be an image.").decode().unwrap().to_rgba8();
 
     if r_image.width() != ( g_image.width() | b_image.width() | a_image.width() ) {
         panic!("Multi channels do not match one or more widths.");
@@ -183,7 +188,11 @@ fn join(r_path: String, g_path: String, b_path: String, a_path: String,) {
             multi.put_pixel(w, h, pixel);
         }
     }
-    let save_path = Path::new(&r_path).file_prefix().unwrap().to_str().unwrap().to_string() + "GBA.tga";
+    let trim_str = red_path.to_str().unwrap().trim_end_matches("_R.tga");
+    let trim_string = format!("{trim_str}_RGBA.tga");
+    println!("{}", trim_string);
+    let save_path = Path::new(trim_string.as_str());
+    println!("{:?}, {}", save_path, r_path);
     multi.save_with_format(save_path, image::ImageFormat::Tga).unwrap();
 }
 
@@ -192,7 +201,11 @@ fn normal(normal_path: String) {
     let image = ImageReader::open(path).expect("Normal Path should be an image.");
     let binding = image.decode().unwrap().to_rgba8();
     let rgb = map_colors(&binding, |p| { Rgba([p[3], p[1], p[0], p[0]]) });
-    let new_file = path.file_prefix().unwrap().to_str().unwrap().to_string() + "_Fixed.png";
-    let save_path = path.with_file_name(new_file);
-    rgb.save_with_format(save_path, image::ImageFormat::Png).unwrap();
+    let new_file = path.file_prefix().unwrap().to_str().unwrap().to_string() + ".png";
+    let new_path = path.with_file_name(new_file);
+    let old_file = path.file_prefix().unwrap().to_str().unwrap().to_string() + "_Old.png";
+    let old_path = path.with_file_name(old_file);
+    rgb.save_with_format(new_path, image::ImageFormat::Png).unwrap();
+    binding.save_with_format(old_path, image::ImageFormat::Png).unwrap();
+
 }
