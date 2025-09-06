@@ -1,5 +1,7 @@
 # FEE Multi Tool
 ## Usage
+Run feemutlitool or use CLI.
+
 Normal Map Fixing: `feemultitool.exe fix-normal <NORMAL_PATH>`
 
 Split Multi Map: `feemultitool.exe split-multi <MULTI_PATH>`
