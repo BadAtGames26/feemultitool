@@ -1,5 +1,5 @@
 # FEE Multi Tool
-A tool for assist in modding FEE.
+A tool to assist in modding FEE.
 
 ## Usage
 Run feemutlitool or use CLI.
